@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --bm-bg: #d9c25c;
+  --bm-bg-soft: #f2e9c4;
+  --bm-panel: rgba(242, 233, 196, 0.94);
+  --bm-panel-strong: rgba(247, 241, 217, 0.98);
+  --bm-ink: #0a0a0a;
+  --bm-muted: #4a4522;
+  --bm-line: rgba(10, 10, 10, 0.14);
+  --bm-primary: #0a0a0a;
+  --bm-secondary: #1c1a08;
+  --bm-accent: #d9c25c;
+  --bm-accent-soft: #e3ce7a;
+  --bm-shadow: 0 18px 42px rgba(10, 10, 10, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  @apply text-zinc-950;
+  background:
+    radial-gradient(circle at top left, rgba(10, 10, 10, 0.06), transparent 24%),
+    radial-gradient(circle at 85% 12%, rgba(10, 10, 10, 0.08), transparent 20%),
+    linear-gradient(180deg, #f2e9c4 0%, #d9c25c 46%, #dcc26a 100%);
+  color: var(--bm-ink);
+  font-family: "Source Sans 3", "Libre Franklin", sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+a,
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.skip-link {
+  @apply sr-only;
+}
+
+.skip-link:focus {
+  @apply not-sr-only fixed left-4 top-4 z-[100] rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-lg;
+}
+
+.card {
+  @apply rounded-[26px] border border-zinc-200/90 bg-[rgba(255,255,255,0.94)] shadow-lg shadow-zinc-200/50 transition-colors duration-200 ease-out;
+  box-shadow: var(--bm-shadow);
+}
+
+.card:hover {
+  border-color: rgba(24, 24, 27, 0.3);
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-[18px] px-4 py-2.5 font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 focus:ring-offset-transparent;
+}
+
+.btn-primary {
+  @apply btn border border-zinc-950 bg-gradient-to-r from-[#d9c25c] to-[#c9ab3f] text-zinc-950 shadow-md shadow-zinc-300/50 hover:-translate-y-0.5 hover:brightness-105;
+}
+
+.btn-secondary {
+  @apply btn border border-zinc-900 bg-[#e3ce7a] text-zinc-950 hover:-translate-y-0.5 hover:bg-[#c9ab3f];
+}
+
+.btn-outline {
+  @apply btn border border-zinc-300 bg-[rgba(255,255,255,0.92)] text-zinc-900 hover:-translate-y-0.5 hover:border-zinc-950 hover:bg-[#d9c25c] hover:text-zinc-950;
+}
+
+.input {
+  @apply w-full rounded-[18px] border border-zinc-200 bg-white px-4 py-3 text-zinc-950 placeholder:text-zinc-400 focus:border-zinc-950/60 focus:outline-none focus:ring-2 focus:ring-zinc-200;
+}
+
+.input-auth {
+  @apply w-full rounded-[18px] border border-zinc-300 bg-white px-4 py-3 text-black placeholder:text-zinc-500 focus:border-black focus:outline-none focus:ring-2 focus:ring-zinc-300;
+  caret-color: #000000;
+}
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input-auth:-webkit-autofill,
+.input-auth:-webkit-autofill:hover,
+.input-auth:-webkit-autofill:focus {
+  -webkit-text-fill-color: #000000;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: #000000;
+}
+
+.panel-muted {
+  @apply rounded-[24px] border border-zinc-200/80 bg-zinc-100;
+}
+
+.metric-card {
+  @apply rounded-[24px] border border-zinc-200 bg-[rgba(255,255,255,0.96)] p-5 shadow-lg shadow-zinc-200/50;
+}
+
+.surface-subtle {
+  @apply rounded-[22px] border border-zinc-200/80 bg-zinc-100;
+}
+
+.surface-quiet {
+  @apply rounded-[22px] border border-zinc-200/70 bg-white;
+}
+
+.role-pill {
+  @apply inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em];
+}
+
+.section-kicker {
+  @apply text-xs font-semibold uppercase tracking-[0.28em];
+}
+
+.inbox-item {
+  @apply rounded-[22px] border border-zinc-200 bg-white p-4 transition-colors duration-200;
+}
+
+.inbox-item:hover {
+  @apply border-zinc-300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
