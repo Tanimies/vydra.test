@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 
+import { requestBackendJson } from '../lib/backendApi'
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -14,11 +16,14 @@ export default function ForgotPassword() {
     setMessage('')
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setMessage('Password reset link sent to your email.')
+      const payload = await requestBackendJson('/auth/forgot-password', {
+        method: 'POST',
+        body: { email }
+      })
+      setMessage(payload?.message || 'If an account exists for that email, a reset link has been sent.')
       setEmail('')
     } catch (err) {
-      setError('Failed to send reset link. Please try again.')
+      setError(err.message || 'Failed to send reset link. Please try again.')
     } finally {
       setLoading(false)
     }

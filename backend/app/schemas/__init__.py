@@ -45,6 +45,27 @@ class Token(BaseModel):
     user: UserResponse
 
 
+class ForgotPasswordRequest(BaseModel):
+    """Forgot password request."""
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    """Forgot password response."""
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request."""
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+
+class ResetPasswordResponse(BaseModel):
+    """Reset password response."""
+    message: str
+
+
 # ===== DOCUMENT SCHEMAS =====
 class DocumentMetadata(BaseModel):
     """Document metadata."""
