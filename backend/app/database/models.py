@@ -740,6 +740,29 @@ class SupportComplaint(Base):
     resolved_at = Column(DateTime, nullable=True)
 
 
+class Feedback(Base):
+    """Feedback exchanged between a student and the educator of a shared classroom.
+
+    Always scoped to a classroom so an educator teaching multiple classes can
+    see feedback broken down per class, and a student enrolled in multiple
+    classes can send feedback to each class's educator independently.
+    """
+
+    __tablename__ = "feedback"
+
+    id = Column(String, primary_key=True, default=new_id)
+    classroom_id = Column(String, ForeignKey("classrooms.id"), nullable=False, index=True)
+    from_user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    from_role = Column(String, nullable=False)
+    to_user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    to_role = Column(String, nullable=False)
+    rating = Column(Integer, nullable=True)
+    message = Column(Text, nullable=False)
+    category = Column(String, default="general", nullable=False)
+    is_anonymous = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class LiveSession(Base):
     """Real-time collaboration session."""
 

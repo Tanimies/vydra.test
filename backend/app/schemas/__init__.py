@@ -1091,6 +1091,16 @@ class SupportComplaintCreate(BaseModel):
     priority: str = "medium"
 
 
+class FeedbackCreate(BaseModel):
+    """Feedback sent from a student to their educator, or an educator to a student."""
+    classroom_id: str
+    to_user_id: str
+    message: str = Field(min_length=1, max_length=4000)
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
+    category: str = "general"
+    is_anonymous: bool = False
+
+
 class TeacherDashboardResponse(BaseModel):
     """Educator dashboard summary."""
     educator: UserResponse

@@ -10,10 +10,50 @@ import { requestBackendJson } from '../lib/backendApi'
 let mermaidInitialized = false
 
 /**
+ * Best-effort fixup for the most common ways the LLM breaks Mermaid syntax:
+ *
+ * 1) Leaving parentheses, colons, pipes, or other punctuation unquoted inside
+ *    a node label, e.g. C[Override run() method]. Mermaid treats "(" as the
+ *    start of a round-edge node shape, so anything after it inside an unquoted
+ *    [...] label causes a parse error. Wrapping the label text in double quotes
+ *    (and escaping any quotes already inside it) makes it literal text again.
+ * 2) Writing an edge label as A -->|Yes|> B instead of A -->|Yes| B. The
+ *    correct syntax closes the label with a single pipe and nothing else --
+ *    a trailing ">" after the closing pipe is invalid and fails to parse.
+ */
+function sanitizeMermaidLabels(code) {
+  const wrapIfNeeded = (open, label, close) => {
+    const trimmed = label.trim()
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      return `${open}${label}${close}`
+    }
+    if (/[(){}|:;"']/.test(label)) {
+      const escaped = label.replace(/"/g, '#quot;')
+      return `${open}"${escaped}"${close}`
+    }
+    return `${open}${label}${close}`
+  }
+
+  return code
+    .split('\n')
+    .map((line) => {
+      return line
+        // Fix "-->|Label|>" (and similar) -- strip the stray ">" right after
+        // an edge label's closing pipe.
+        .replace(/\|([^|\n]*)\|>/g, '|$1|')
+        .replace(/(\[)([^\[\]]*)(\])/g, (_, open, label, close) => wrapIfNeeded(open, label, close))
+        .replace(/(\{)([^{}]*)(\})/g, (_, open, label, close) => wrapIfNeeded(open, label, close))
+    })
+    .join('\n')
+}
+
+/**
  * Renders a Mermaid diagram from a fenced ```diagram / ```mermaid code block.
  * The AI chat is instructed (see backend qa.py system prompt) to emit these
  * fences whenever a visual explanation (flowchart, cycle, structure, timeline)
- * would help the answer land better than prose alone.
+ * would help the answer land better than prose alone. As a safety net, if the
+ * raw source fails to parse we retry once with sanitizeMermaidLabels() before
+ * giving up and showing the raw source.
  */
 function MermaidBlock({ code }) {
   const containerRef = useRef(null)
@@ -29,6 +69,11 @@ function MermaidBlock({ code }) {
         if (!mermaidInitialized) {
           mermaid.initialize({
             startOnLoad: false,
+            // The app's global Tailwind reset conflicts with Mermaid's default
+            // HTML-based node labels (rendered inside <foreignObject><span>),
+            // which makes label text invisible even though the node shapes draw
+            // fine. Forcing plain SVG <text> labels sidesteps that entirely.
+            flowchart: { htmlLabels: false },
             theme: 'base',
             themeVariables: {
               primaryColor: '#d9c25c',
@@ -42,7 +87,48 @@ function MermaidBlock({ code }) {
           })
           mermaidInitialized = true
         }
-        const { svg } = await mermaid.render(`mermaid-${uid}`, code.trim())
+
+        // mermaid.render(id, code) with no third argument appends its scratch
+        // SVG straight to document.body, and only removes it on success -- on
+        // a parse failure it draws its own "Syntax error in text" bomb graphic
+        // into that body-attached element and leaves it there permanently
+        // (confirmed in Mermaid's own source: render$4 in mermaid.js).
+        //
+        // Passing a container fixes that, but it must still be attached to
+        // document.body (just visually hidden) rather than fully detached --
+        // several of Mermaid's per-diagram renderers (flowchart's included)
+        // internally re-locate the SVG via a document.body-scoped query
+        // rather than the element reference we pass in, so a detached
+        // container makes that lookup return null and crashes with
+        // "Cannot read properties of null (reading 'appendChild')".
+        // We attach an off-screen container ourselves and always remove it
+        // in `finally`, so cleanup happens on both success and failure --
+        // unlike Mermaid's own cleanup, which only runs on success.
+        const renderIntoScratch = async (id, text) => {
+          const scratch = document.createElement('div')
+          scratch.setAttribute('aria-hidden', 'true')
+          scratch.style.position = 'absolute'
+          scratch.style.top = '-10000px'
+          scratch.style.left = '-10000px'
+          scratch.style.visibility = 'hidden'
+          document.body.appendChild(scratch)
+          try {
+            return await mermaid.render(id, text, scratch)
+          } finally {
+            scratch.remove()
+          }
+        }
+
+        const source = code.trim()
+        let svg
+        try {
+          ;({ svg } = await renderIntoScratch(`mermaid-${uid}`, source))
+        } catch (firstErr) {
+          const sanitized = sanitizeMermaidLabels(source)
+          if (sanitized === source) throw firstErr
+          ;({ svg } = await renderIntoScratch(`mermaid-${uid}-retry`, sanitized))
+        }
+
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg
         }
